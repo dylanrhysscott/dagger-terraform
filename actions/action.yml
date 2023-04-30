@@ -2,6 +2,6 @@ name: terraform-ci-runner
 description: An action for the Terraform Dagger runner
 runs:
   using: 'docker'
-  image: "ghcr.io/dylanrhysscott/dagger-terraform:latest"
+  image: "dylanrhysscott/dagger-terraform:latest"
   args:
     - "--help"
