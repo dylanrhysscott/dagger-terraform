@@ -36,7 +36,7 @@ func build(ctx context.Context, client *dagger.Client) {
 		Container().
 		From("alpine:latest").
 		WithFile("/terraform-ci-runner", build.File("/src/terraform-ci-runner/terraform-ci-runner")).
-		WithEntrypoint([]string{"/terraform-ci-runner", "--help"})
+		WithEntrypoint([]string{"/terraform-ci-runner"})
 
 	addr, err := action.Publish(ctx, "dylanrhysscott/dagger-terraform:latest")
 	if err != nil {
