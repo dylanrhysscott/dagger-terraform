@@ -34,7 +34,7 @@ func build(ctx context.Context, client *dagger.Client) {
 
 	action := client.Pipeline("action-finalise").
 		Container().
-		From("alpine:latest").
+		From("docker:dind").
 		WithFile("/terraform-ci-runner", build.File("/src/terraform-ci-runner/terraform-ci-runner")).
 		WithEntrypoint([]string{"/terraform-ci-runner"})
 
