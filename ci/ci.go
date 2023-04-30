@@ -2,12 +2,13 @@ package ci
 
 import (
 	"context"
+	"fmt"
 
 	"dagger.io/dagger"
 )
 
 type CIRunner interface {
-	RunPipeline(ctx context.Context) error
+	RunPipeline(ctx context.Context, pipeline string) error
 }
 
 func createDaggerClient(ctx context.Context) (*dagger.Client, error) {
@@ -16,4 +17,14 @@ func createDaggerClient(ctx context.Context) (*dagger.Client, error) {
 		return nil, err
 	}
 	return client, nil
+}
+
+func createPipelineStep(ctx context.Context, c *dagger.Container, args []string) (*dagger.Container, error) {
+	c = c.WithExec(args)
+	out, err := c.Stdout(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(out)
+	return c, nil
 }

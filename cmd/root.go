@@ -14,6 +14,7 @@ import (
 
 var version string
 var sourceDir string
+var pipeline string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -25,7 +26,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = runner.RunPipeline(context.TODO())
+		err = runner.RunPipeline(context.TODO(), pipeline)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,6 +43,7 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.Flags().StringVarP(&pipeline, "plan", "p", "deploy", "Pipeline to run")
 	rootCmd.Flags().StringVarP(&version, "source", "s", ".", "Path to the Terraform source")
 	rootCmd.Flags().StringVarP(&version, "version", "v", "1.4.6", "The image tag for hashicorp/terraform to use")
 }

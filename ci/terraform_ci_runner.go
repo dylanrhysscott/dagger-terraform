@@ -20,64 +20,72 @@ func NewTerraformCIRunner(ctx context.Context, terraformImageTag string, sourceD
 	}, nil
 }
 
-func (t *TerraformCIRunner) RunPipeline(ctx context.Context) error {
-	client, err := createDaggerClient(ctx)
+func (t *TerraformCIRunner) RunPipeline(ctx context.Context, pipeline string) error {
+	var client *dagger.Client
+	var err error
+	client, err = createDaggerClient(ctx)
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 	t.daggerClient = client
-	c := t.terraformContainer()
-	c, err = t.runInitStep(ctx, c)
+	switch pipeline {
+	case "plan":
+		err = t.createPlanPipeline(ctx)
+	case "deploy":
+		err = t.createDeployPipeline(ctx)
+	default:
+		err = fmt.Errorf("unknown pipeline: %s", pipeline)
+	}
+	return err
+}
+
+func (t *TerraformCIRunner) createPlanPipeline(ctx context.Context) error {
+	pipeline := t.daggerClient.Pipeline("plan", dagger.PipelineOpts{
+		Description: "A pipleine for planning Terraform",
+	})
+	defer pipeline.Close()
+	var container *dagger.Container
+	var err error
+	container = t.terraformContainer(pipeline)
+	container, err = createPipelineStep(ctx, container, []string{"init"})
 	if err != nil {
 		return err
 	}
-	c, err = t.runPlanStep(ctx, c)
-	if err != nil {
-		return err
-	}
-	_, err = t.runApplyStep(ctx, c)
+	_, err = createPipelineStep(ctx, container, []string{"plan", "-out", "server.plan"})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *TerraformCIRunner) runInitStep(ctx context.Context, c *dagger.Container) (*dagger.Container, error) {
-	c = c.WithExec([]string{"init"})
-	out, err := c.Stdout(ctx)
+func (t *TerraformCIRunner) createDeployPipeline(ctx context.Context) error {
+	pipeline := t.daggerClient.Pipeline("deploy", dagger.PipelineOpts{
+		Description: "A pipleine for deploying Terraform",
+	})
+	defer pipeline.Close()
+	var container *dagger.Container
+	var err error
+	container = t.terraformContainer(pipeline)
+	container, err = createPipelineStep(ctx, container, []string{"init"})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	fmt.Println(out)
-	return c, nil
+	container, err = createPipelineStep(ctx, container, []string{"plan", "-out", "server.plan"})
+	if err != nil {
+		return err
+	}
+	_, err = createPipelineStep(ctx, container, []string{"apply", "server.plan"})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (t *TerraformCIRunner) runPlanStep(ctx context.Context, c *dagger.Container) (*dagger.Container, error) {
-	c = c.WithExec([]string{"plan", "-out", "server.plan"})
-	out, err := c.Stdout(ctx)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(out)
-	return c, nil
-}
-
-func (t *TerraformCIRunner) runApplyStep(ctx context.Context, c *dagger.Container) (*dagger.Container, error) {
-	c = c.WithExec([]string{"apply", "server.plan"})
-	out, err := c.Stdout(ctx)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(out)
-	return c, nil
-}
-
-func (t *TerraformCIRunner) terraformContainer() *dagger.Container {
+func (t *TerraformCIRunner) terraformContainer(client *dagger.Client) *dagger.Container {
 	workingDirPath := "/src"
 	fullImageTag := fmt.Sprintf("hashicorp/terraform:%s", t.ImageTag)
-	sourceFolder := t.daggerClient.Host().Directory(t.SourceDirectory)
-	return t.daggerClient.
+	sourceFolder := client.Host().Directory(t.SourceDirectory)
+	return client.
 		Container().
 		From(fullImageTag).
 		WithDirectory(workingDirPath, sourceFolder).
