@@ -5,7 +5,7 @@ package cmd
 
 import (
 	"context"
-	"daggertf/ci"
+	"daggertf/terraform-ci-runner/internal"
 	"log"
 	"os"
 
@@ -18,11 +18,11 @@ var pipeline string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "daggertf",
+	Use:   "terraform-ci-runner",
 	Short: "A Terraform CI runner built with Dagger",
 	Long:  `A Terraform CI runner built with Dagger`,
 	Run: func(cmd *cobra.Command, args []string) {
-		runner, err := ci.NewTerraformCIRunner(context.TODO(), version, sourceDir)
+		runner, err := internal.NewTerraformCIRunner(context.TODO(), version, sourceDir)
 		if err != nil {
 			log.Fatal(err)
 		}

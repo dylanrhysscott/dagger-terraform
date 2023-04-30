@@ -1,7 +1,8 @@
-package ci
+package internal
 
 import (
 	"context"
+	"daggertf/ci"
 	"fmt"
 
 	"dagger.io/dagger"
@@ -23,7 +24,7 @@ func NewTerraformCIRunner(ctx context.Context, terraformImageTag string, sourceD
 func (t *TerraformCIRunner) RunPipeline(ctx context.Context, pipeline string) error {
 	var client *dagger.Client
 	var err error
-	client, err = createDaggerClient(ctx)
+	client, err = ci.CreateDaggerClient(ctx)
 	if err != nil {
 		return err
 	}
@@ -47,11 +48,11 @@ func (t *TerraformCIRunner) createPlanPipeline(ctx context.Context) error {
 	var container *dagger.Container
 	var err error
 	container = t.terraformContainer(pipeline)
-	container, err = createPipelineStep(ctx, container, []string{"init"})
+	container, err = ci.CreatePipelineStep(ctx, container, []string{"init"})
 	if err != nil {
 		return err
 	}
-	_, err = createPipelineStep(ctx, container, []string{"plan", "-out", "server.plan"})
+	_, err = ci.CreatePipelineStep(ctx, container, []string{"plan", "-out", "server.plan"})
 	if err != nil {
 		return err
 	}
@@ -66,15 +67,15 @@ func (t *TerraformCIRunner) createDeployPipeline(ctx context.Context) error {
 	var container *dagger.Container
 	var err error
 	container = t.terraformContainer(pipeline)
-	container, err = createPipelineStep(ctx, container, []string{"init"})
+	container, err = ci.CreatePipelineStep(ctx, container, []string{"init"})
 	if err != nil {
 		return err
 	}
-	container, err = createPipelineStep(ctx, container, []string{"plan", "-out", "server.plan"})
+	container, err = ci.CreatePipelineStep(ctx, container, []string{"plan", "-out", "server.plan"})
 	if err != nil {
 		return err
 	}
-	_, err = createPipelineStep(ctx, container, []string{"apply", "server.plan"})
+	_, err = ci.CreatePipelineStep(ctx, container, []string{"apply", "server.plan"})
 	if err != nil {
 		return err
 	}

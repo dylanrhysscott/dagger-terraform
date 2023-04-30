@@ -11,7 +11,7 @@ type CIRunner interface {
 	RunPipeline(ctx context.Context, pipeline string) error
 }
 
-func createDaggerClient(ctx context.Context) (*dagger.Client, error) {
+func CreateDaggerClient(ctx context.Context) (*dagger.Client, error) {
 	client, err := dagger.Connect(ctx)
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func createDaggerClient(ctx context.Context) (*dagger.Client, error) {
 	return client, nil
 }
 
-func createPipelineStep(ctx context.Context, c *dagger.Container, args []string) (*dagger.Container, error) {
+func CreatePipelineStep(ctx context.Context, c *dagger.Container, args []string) (*dagger.Container, error) {
 	c = c.WithExec(args)
 	out, err := c.Stdout(ctx)
 	if err != nil {
