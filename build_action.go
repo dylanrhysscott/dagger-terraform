@@ -29,6 +29,7 @@ func build(ctx context.Context, client *dagger.Client) {
 		WithDirectory(workingDirPath, sourceFolder).
 		WithWorkdir("/src/terraform-ci-runner").
 		WithEnvVariable("CGO_ENABLED", "0").
+		WithEnvVariable("GOARCH", "amd64").
 		WithExec([]string{"go", "build", "-o", "terraform-ci-runner"})
 
 	action := client.Pipeline("action-finalise").
